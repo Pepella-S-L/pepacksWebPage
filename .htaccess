@@ -1,0 +1,19 @@
+# Apache rewrite rules for Pepacks
+RewriteEngine On
+
+# Redirect all requests to /api to api/index.php
+RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# Deny access to sensitive directories
+RewriteRule ^(config|data|src|templates|vendor)/ - [F,L]
+
+# Allow direct access to public assets
+RewriteRule ^public/ - [L]
+
+# If file or directory exists, serve directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else goes to index.html (SPA fallback)
+RewriteRule ^ index.html [L]
