@@ -19,6 +19,29 @@ Plataforma para descubrir y compartir juegos indie, estilo blog similar a gamdie
 - TailwindCSS
 - Lucide React
 
+## Cómo subir tus juegos
+
+Hay tres formas, de más a menos recomendada:
+
+1. **Archivos en el repo** (descarga directa en tu propia web)
+   - Copia el `.zip` del juego en `public/games/` (ej. `public/games/mi-juego.zip`) y la portada en `public/covers/`.
+   - En el panel admin → *Añadir juego*: descarga = `games/mi-juego.zip`, portada = `covers/mi-juego.png`.
+2. **Juego HTML5 jugable en la web**
+   - Descomprime la build web del juego en `public/games/mi-juego/` (con su `index.html`).
+   - En *URL para jugar online* pon `games/mi-juego/index.html` → aparece el botón **Jugar ahora**.
+3. **Enlace externo**: pega una URL (itch.io, Google Drive, GitHub Releases...) como descarga. Recomendado para archivos grandes (GitHub limita a 100 MB por archivo).
+
+### Publicar los cambios del panel admin
+
+Al ser una web estática sin servidor, lo que añades en `/admin` se guarda **solo en tu navegador**. Para que lo vean todos:
+
+1. En el panel pulsa **Exportar** (descarga `games.json`).
+2. Reemplaza `src/data/games.json` con ese archivo, haz commit y push a `main`.
+3. El workflow de GitHub Actions (`.github/workflows/deploy.yml`) construye y publica la web.
+   Actívalo en *Settings → Pages → Source: GitHub Actions*.
+
+También puedes editar `src/data/games.json` a mano. Campos: `id, title, description, tags, author, version, cover, downloadUrl, playUrl, downloads, visible, createdAt`.
+
 ## Instalación
 
 ```bash
@@ -46,7 +69,12 @@ npm run preview
 ## Estructura del Proyecto
 
 ```
+public/
+├── games/                 # Aquí van los .zip / juegos HTML5
+└── covers/                # Portadas
 src/
+├── data/games.json        # Catálogo de juegos (fuente de verdad publicada)
+├── utils.js
 ├── components/
 │   ├── Header.jsx         # Navegación principal con autenticación
 │   ├── Footer.jsx         # Pie de página
@@ -61,7 +89,8 @@ src/
 │   ├── Home.jsx           # Página principal con grid de juegos
 │   ├── GameDetail.jsx     # Detalle de juego individual
 │   ├── AdminPanel.jsx     # Panel de administración para gestionar juegos
-│   └── Login.jsx          # Página de login para admin
+│   ├── Login.jsx          # Página de login para admin
+│   └── NotFound.jsx
 ├── App.jsx                # Configuración de rutas y providers
 ├── main.jsx               # Punto de entrada
 └── index.css              # Estilos globales
@@ -72,7 +101,9 @@ src/
 El sistema incluye autenticación simple para el administrador:
 
 - **Usuario**: admin
-- **Contraseña**: admin123
+- **Contraseña**: admin123 (por defecto)
+
+Cambia las credenciales copiando `.env.example` a `.env` y editando `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` (para GitHub Actions, no hay secretos: la contraseña queda en el JS publicado, así que es solo una barrera básica; los datos reales los controla quien tenga acceso al repo).
 
 Solo el usuario autenticado puede acceder al panel de administración (`/admin`). La sesión se mantiene en localStorage.
 
