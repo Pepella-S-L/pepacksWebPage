@@ -1,64 +1,65 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import seed from '../data/games.json'
+import { useAuth } from './AuthContext'
 import { slugify } from '../utils'
+import { isValidCatalog, normalizeGame } from '../lib/games'
 
 const GameContext = createContext(null)
-const KEY = 'igh_games'
+const KEY = 'igh_games_draft'
+const published = seed.map(normalizeGame)
 
-function load() {
+function loadDraft() {
   try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {}
-  return seed
+    const raw = JSON.parse(localStorage.getItem(KEY))
+    return isValidCatalog(raw) ? raw.map(normalizeGame) : null
+  } catch {
+    return null
+  }
 }
 
+/**
+ * Los visitantes SIEMPRE ven src/data/games.json (lo publicado).
+ * El admin edita un "borrador" guardado en su navegador; no afecta a nadie
+ * hasta que lo exporta y lo sustituye en el repo.
+ */
 export function GameProvider({ children }) {
-  const [games, setGames] = useState(load)
+  const { isAuthenticated } = useAuth()
+  const [draft, setDraft] = useState(loadDraft)
 
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(games))
+      if (draft) localStorage.setItem(KEY, JSON.stringify(draft))
+      else localStorage.removeItem(KEY)
     } catch {}
-  }, [games])
+  }, [draft])
 
-  const uniqueId = (title, ignoreId) => {
+  const games = isAuthenticated && draft ? draft : published
+  const hasDraft = isAuthenticated && !!draft
+
+  const mutate = (fn) => setDraft((prev) => fn(prev ?? published))
+
+  const uniqueId = (title) => {
     const base = slugify(title)
     let id = base
     let n = 2
-    while (games.some((g) => g.id === id && g.id !== ignoreId)) id = `${base}-${n++}`
+    while (games.some((g) => g.id === id)) id = `${base}-${n++}`
     return id
   }
 
   const addGame = (data) =>
-    setGames((prev) => [
-      {
-        downloads: 0,
-        visible: true,
-        createdAt: new Date().toISOString().slice(0, 10),
-        ...data,
-        id: uniqueId(data.title),
-      },
-      ...prev,
+    mutate((list) => [
+      normalizeGame({ createdAt: new Date().toISOString().slice(0, 10), ...data, id: uniqueId(data.title) }),
+      ...list,
     ])
-
-  const updateGame = (id, data) =>
-    setGames((prev) => prev.map((g) => (g.id === id ? { ...g, ...data } : g)))
-
-  const deleteGame = (id) => setGames((prev) => prev.filter((g) => g.id !== id))
-
-  const toggleVisible = (id) =>
-    setGames((prev) => prev.map((g) => (g.id === id ? { ...g, visible: !g.visible } : g)))
-
-  const registerDownload = (id) =>
-    setGames((prev) => prev.map((g) => (g.id === id ? { ...g, downloads: (g.downloads || 0) + 1 } : g)))
-
-  const importGames = (list) => setGames(list)
-  const resetGames = () => setGames(seed)
+  const updateGame = (id, data) => mutate((list) => list.map((g) => (g.id === id ? { ...g, ...data } : g)))
+  const deleteGame = (id) => mutate((list) => list.filter((g) => g.id !== id))
+  const toggleVisible = (id) => mutate((list) => list.map((g) => (g.id === id ? { ...g, visible: !g.visible } : g)))
+  const importGames = (list) => setDraft(list.map(normalizeGame))
+  const resetGames = () => setDraft(null)
 
   return (
     <GameContext.Provider
-      value={{ games, addGame, updateGame, deleteGame, toggleVisible, registerDownload, importGames, resetGames }}
+      value={{ games, hasDraft, addGame, updateGame, deleteGame, toggleVisible, importGames, resetGames }}
     >
       {children}
     </GameContext.Provider>

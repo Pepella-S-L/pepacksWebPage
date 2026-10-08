@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom'
 import { Download, Eye, EyeOff, Pencil, Plus, RotateCcw, Trash2, Upload } from 'lucide-react'
 import { useGames } from '../context/GameContext'
 import EditGameModal from '../components/EditGameModal'
+import useDocumentTitle from '../hooks/useDocumentTitle'
+import { isValidCatalog } from '../lib/games'
 
 export default function AdminPanel() {
-  const { games, addGame, updateGame, deleteGame, toggleVisible, importGames, resetGames } = useGames()
+  useDocumentTitle('Admin')
+  const { games, hasDraft, addGame, updateGame, deleteGame, toggleVisible, importGames, resetGames } = useGames()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('all')
   const [editing, setEditing] = useState(null) // null | 'new' | game
@@ -39,7 +42,7 @@ export default function AdminPanel() {
     if (!file) return
     try {
       const list = JSON.parse(await file.text())
-      if (!Array.isArray(list)) throw new Error()
+      if (!isValidCatalog(list)) throw new Error()
       importGames(list)
     } catch {
       alert('Archivo no válido: debe ser un games.json con una lista de juegos.')
@@ -56,9 +59,10 @@ export default function AdminPanel() {
       </div>
 
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
-        Los cambios se guardan en <strong>este navegador</strong>. Para publicarlos para todos los visitantes, pulsa{' '}
-        <strong>Exportar</strong>, reemplaza <code>src/data/games.json</code> con el archivo descargado y vuelve a
-        desplegar. Más detalles en el README.
+        {hasDraft ? <strong>Tienes cambios sin publicar. </strong> : null}
+        Lo que editas aquí es un <strong>borrador guardado en este navegador</strong>: los visitantes siguen viendo{' '}
+        <code>src/data/games.json</code>. Para publicarlo pulsa <strong>Exportar</strong>, reemplaza ese archivo con el
+        descargado y sube el cambio al repo (o usa <code>npm run add-game</code>). Ver README.
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -93,8 +97,7 @@ export default function AdminPanel() {
               <th className="p-3">Título</th>
               <th className="p-3">Autor</th>
               <th className="p-3">Versión</th>
-              <th className="p-3">Descargas</th>
-              <th className="p-3">Estado</th>
+                    <th className="p-3">Estado</th>
               <th className="p-3 text-right">Acciones</th>
             </tr>
           </thead>
@@ -108,7 +111,6 @@ export default function AdminPanel() {
                 </td>
                 <td className="p-3 text-slate-400">{g.author}</td>
                 <td className="p-3 text-slate-400">{g.version}</td>
-                <td className="p-3 text-slate-400">{g.downloads || 0}</td>
                 <td className="p-3">
                   <span className={g.visible ? 'text-emerald-400' : 'text-slate-500'}>{g.visible ? 'Visible' : 'Oculto'}</span>
                 </td>
@@ -133,7 +135,7 @@ export default function AdminPanel() {
             ))}
             {!filtered.length && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-500">
+                <td colSpan={5} className="p-8 text-center text-slate-500">
                   No hay juegos.
                 </td>
               </tr>
