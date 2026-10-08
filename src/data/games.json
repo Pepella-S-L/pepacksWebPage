@@ -2,14 +2,16 @@
   {
     "id": "ejemplo-juego",
     "title": "Juego de ejemplo",
-    "description": "Esto es un juego de ejemplo. Bórralo desde el panel admin o edita src/data/games.json y añade los tuyos.",
+    "description": "Esto es un juego de ejemplo. Bórralo desde el panel admin o con npm run add-game añade los tuyos.",
     "tags": ["Aventura", "Pixel Art"],
+    "platforms": ["Web"],
     "author": "Pepacks",
     "version": "1.0.0",
     "cover": "",
+    "screenshots": [],
     "downloadUrl": "",
     "playUrl": "",
-    "downloads": 0,
+    "featured": true,
     "visible": true,
     "createdAt": "2026-01-01"
   }

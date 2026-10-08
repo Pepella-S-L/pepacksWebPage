@@ -16,3 +16,10 @@ export function slugify(text) {
       .replace(/^-+|-+$/g, '') || 'juego'
   )
 }
+
+export const COVER_FALLBACK = 'covers/placeholder.svg'
+
+export function onImgError(e) {
+  e.currentTarget.onerror = null
+  e.currentTarget.src = assetUrl(COVER_FALLBACK)
+}
