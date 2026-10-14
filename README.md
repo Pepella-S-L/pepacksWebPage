@@ -124,7 +124,7 @@ El sistema incluye autenticación simple para el administrador:
 - **Usuario**: admin
 - **Contraseña**: admin123 (por defecto)
 
-En local, cambia las credenciales copiando `.env.example` a `.env` y editando `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` (para GitHub Actions, no hay secretos: la contraseña queda en el JS publicado, así que es solo una barrera básica; los datos reales los controla quien tenga acceso al repo).
+En local, cambia las credenciales copiando `.env.example` a `.env` y editando `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` (para la web publicada, ver «Contraseña en la web publicada» más abajo). Sea cual sea, la contraseña queda dentro del JS publicado: es solo una barrera básica, y los datos reales los controla quien tenga acceso al repo.
 
 Solo el usuario autenticado puede acceder al panel de administración (`/admin`). La sesión se mantiene en localStorage.
 
